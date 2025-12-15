@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>森境漫遊｜苗栗綠色旅宿地圖</title>
+    
+    <link 
+        rel="stylesheet" 
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/SJPMeR/JZQj7BwWc8=" 
+        crossorigin=""
+    />
+    
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+
+    <header>
+        <h1>🌳 森境漫遊 | Miaoli Green-Stay Map</h1>
+        <p>探索苗栗在地、永續的文青感旅宿。</p>
+    </header>
+
+    <main>
+        <section class="map-container">
+            <h2>🌍 綠色旅宿與景點地圖</h2>
+            <div id="map"></div>
+        </section>
+
+        <section class="data-section">
+            <h2>🏨 旅宿與景點列表</h2>
+            <p>旅宿資料將顯示在上方地圖中。</p>
+        </section>
+    </main>
+
+    <script 
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20n6a9c8z9G6yH2Gq8W8m6Cg4Yc4kQ8jF0c4pS+g="
+        crossorigin=""
+    ></script>
+
+    <script src="main.js"></script>
+    
+</body>
+</html>
+/* 確保地圖容器有明確的高度，否則地圖無法顯示 */
+#map {
+    height: 500px; /* 您可以依據需求調整高度 */
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* 讓網頁看起來更美觀 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+header {
+    text-align: center;
+    padding: 10px 0;
+    background-color: #e0f2f1;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.map-container {
+    margin-bottom: 30px;
+}
+// 旅宿資料範例 (請用您實際的資料取代這個陣列)
+// 確保每個物件都有 name, lat (緯度), lng (經度)
+const lodgingsData = [
+    { name: "山居歲月", lat: 24.4205, lng: 120.9085, style: "文青風" },
+    { name: "森林之家", lat: 24.5670, lng: 120.8250, style: "生態永續" },
+    { name: "三義好客民宿", lat: 24.3820, lng: 120.7600, style: "家庭" },
+    { name: "苑裡綠光", lat: 24.3980, lng: 120.7000, style: "簡約" },
+];
+
+// 苗栗縣中心座標和起始縮放等級
+const MIAOLI_CENTER = [24.500, 120.900];
+const INITIAL_ZOOM = 10;
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    // 檢查地圖容器是否存在
+    if (document.getElementById('map')) {
+        initializeLeafletMap();
+    }
+});
+
+function initializeLeafletMap() {
+    // 1. 初始化地圖實例 (Map Object)
+    const map = L.map('map').setView(MIAOLI_CENTER, INITIAL_ZOOM);
+    
+    // 2. 加入 OpenStreetMap 圖層
+    // L.tileLayer 是地圖底圖的來源
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '地圖資料 © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // 3. 遍歷所有旅宿並在地圖上放置標記 (Marker)
+    lodgingsData.forEach(lodging => {
+        if (lodging.lat && lodging.lng) {
+            
+            // 建立彈出式資訊視窗的內容
+            const popupContent = `
+                <h3>${lodging.name}</h3>
+                <p>風格：${lodging.style}</p>
+                <p>座標：${lodging.lat}, ${lodging.lng}</p>
+                <button onclick="zoomToLocation(${lodging.lat}, ${lodging.lng})">查看詳情</button>
+            `;
+            
+            // L.marker() 創建標記，並添加到地圖
+            L.marker([lodging.lat, lodging.lng]) 
+                .addTo(map)
+                .bindPopup(popupContent); // 將資訊視窗綁定到標記上
+        }
+    });
+    
+    // 4. (可選) 讓地圖適應所有標記，確保所有點都在視野內
+    // 如果 lodgingsData 不為空，則計算邊界
+    if (lodgingsData.length > 0) {
+        const bounds = lodgingsData.map(l => [l.lat, l.lng]);
+        map.fitBounds(bounds, { padding: [50, 50] }); // 設置地圖邊界，並留白 50px
+    }
+}
+
+// (可選) 範例函數：點擊按鈕時可以移動地圖中心到該地點
+// 注意：這個函數需要被定義在全域範圍，才能被 HTML 的 onclick 事件呼叫。
+window.zoomToLocation = function(lat, lng) {
+    // 這裡可以加入更多邏輯，例如在您網頁的側欄顯示該旅宿的 AI 介紹
+    console.log(`導航至：${lat}, ${lng}`);
+    // 您可以讓地圖移動到該點並放大
+    // map.setView([lat, lng], 14); 
+    alert(`點擊了 ${lat}, ${lng} 的詳細資料按鈕！`);
+}
